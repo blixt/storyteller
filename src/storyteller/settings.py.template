@@ -1,0 +1,52 @@
+# -*- coding: utf-8 -*-
+#
+# Copyright © 2010 Andreas Blixt
+#
+# This file is part of Storyteller.
+#
+# Storyteller is free software: you can redistribute it and/or modify it
+# under the terms of the GNU General Public License as published by the Free
+# Software Foundation, either version 3 of the License, or (at your option)
+# any later version.
+#
+# Storyteller is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
+# details.
+#
+# You should have received a copy of the GNU General Public License along with
+# Storyteller. If not, see http://www.gnu.org/licenses/.
+#
+
+from datetime import timedelta
+import hashlib
+import os
+
+DOMAIN = 'www.example.com'
+TEMPLATE_DIR = 'templates'
+
+ERROR_TEMPLATE = '500.html'
+NOT_FOUND_TEMPLATE = '404.html'
+
+# The Google Analytics tracker id.
+ANALYTICS_TRACKER_ID = ''
+
+# The time that a story is locked to a user.
+LOCK_DURATION = timedelta(seconds=120)
+
+# The number of paragraphs per page.
+PAGE_SIZE = 10
+
+# Number of votes required to accept or deny a paragraph.
+VOTES_REQUIRED = 3
+
+# Store the current version of the deployed application.
+VERSION = os.environ['CURRENT_VERSION_ID']
+
+# Also generate a hash from the version which can be used in situations where
+# brevity is desired.
+VERSION_HASH = hashlib.md5(VERSION).hexdigest()[:5]
+
+# Whether debug help should be enabled. The following code sets it to True if
+# the application is running on a development server, False if not.
+DEBUG = os.environ['SERVER_SOFTWARE'].startswith('Development')

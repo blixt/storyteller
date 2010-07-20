@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block page_title %}An error occurred{% endblock %}
+{% block page_content %}
+<h1>An error occurred</h1>
+<p>An unexpected error occurred. The error has been logged and
+administrators will look into it shortly.</p>
+{% if traceback %}
+<h2>Debug information</h2>
+<pre>{{ traceback }}</pre>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,28 @@
+{% autoescape on %}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{% block page_title %}Untitled page{% endblock %}{% block page_title_suffix %} – Storyteller{% endblock %}</title>
+    <meta name="viewport" content="initial-scale=1.0; minimum-scale=1.0; maximum-scale=1.0; user-scalable=0">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <link href="{{ "style.css"|static }}" rel="stylesheet" type="text/css">
+    {% block page_head %}{% endblock %}
+</head>
+<body>
+    <div id="app">
+        <div id="content">{% block page_content %}{% endblock %}</div>
+    </div>
+    <!-- Google Analytics -->
+    <script type="text/javascript">
+    var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+    document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+    </script>
+    <script type="text/javascript">
+    try {
+    var pageTracker = _gat._getTracker("{{ settings.ANALYTICS_TRACKER_ID }}");
+    pageTracker._trackPageview();
+    } catch(err) {}</script>
+    {% block page_foot %}{% endblock %}
+</body>
+</html>
+{% endautoescape %}

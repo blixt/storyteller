@@ -1,0 +1,43 @@
+application: collaborative-stories
+version: 1
+runtime: python
+api_version: 1
+
+derived_file_type:
+- python_precompiled
+
+default_expiration: "365d"
+
+handlers:
+- url: /s/[a-f0-9]{5}/(.*)
+  static_files: static/\1
+  upload: static/.*
+
+- url: /robots.txt
+  static_files: static/robots.txt
+  upload: static/robots\.txt
+
+- url: /favicon.ico
+  static_files: static/images/favicon.ico
+  upload: static/images/favicon\.ico
+
+- url: /admin/.*
+  script: $PYTHON_LIB/google/appengine/ext/admin
+  login: admin
+
+- url: /.*
+  script: app.py
+
+skip_files: |
+ ^(.*/)?(
+ (app\.yaml)|
+ (app\.yml)|
+ (index\.yaml)|
+ (index\.yml)|
+ (#.*#)|
+ (.*~)|
+ (.*\.py[co])|
+ (.*\.template)|
+ (.*/RCS/.*)|
+ (\..*)|
+ )$
