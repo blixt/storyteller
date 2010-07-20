@@ -20,6 +20,8 @@
 
 import time
 
+import oauth2
+
 from storyteller import settings
 
 def _get_value(obj, name):
@@ -73,6 +75,20 @@ def get_dict(obj, attributes):
         result[alias if alias else attr] = value
 
     return result
+
+def oauth_req(url, http_method='GET', post_body=None, http_headers=None):
+    consumer = oauth2.Consumer(key=settings.TWITTER_CONSUMER_KEY,
+                               secret=settings.TWITTER_CONSUMER_SECRET)
+    token = oauth2.Token(key=settings.TWITTER_USER_KEY,
+                         secret=settings.TWITTER_USER_SECRET)
+    client = oauth2.Client(consumer, token)
+
+    resp, content = client.request(
+        url,
+        method=http_method,
+        body=post_body,
+        headers=http_headers)
+    return content
 
 def public(func):
     """A decorator that defines a function as publicly accessible.

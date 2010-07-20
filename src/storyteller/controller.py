@@ -31,7 +31,7 @@ import os
 from google.appengine.api import memcache
 
 import storyteller
-from storyteller import model, settings
+from storyteller import model, settings, utils
 from storyteller.utils import public
 
 def _get_paragraphs(story, page=None):
@@ -76,6 +76,12 @@ def _vote(handler, story_id, keep):
         memcache.delete_multi([
             'story:%d' % story_id,
             'paragraphs:%d:%d' % (story_id, page)])
+
+        # Only tweet for one story (currently id 1).
+        if settings.TWITTER_USERNAME and story.key().id() == 1:
+            utils.oauth_req(
+                'http://api.twitter.com/1/statuses/update.json',
+                'POST', 'status=%s' % paragraph.text)
     else:
         memcache.delete('story:%d' % story_id)
 

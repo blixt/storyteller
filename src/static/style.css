@@ -179,9 +179,9 @@ textarea:focus {
 }
 
 #footer {
+    height: 22px;
     margin: 0 auto 30px;
     padding: 0 17px;
-    text-align: right;
     width: 640px;
 }
 
@@ -194,6 +194,10 @@ textarea:focus {
 
 #footer a:hover {
     color: #fff;
+}
+
+#github {
+    float: right;
 }
 
 #lock-info {
@@ -251,6 +255,11 @@ textarea:focus {
 
 #suggest {
     float: right;
+}
+
+#twitter {
+    background: url(http://twitter-badges.s3.amazonaws.com/t_small-c.png) 0 50% no-repeat;
+    padding-left: 25px;
 }
 
 #vote {

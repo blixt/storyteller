@@ -37,6 +37,13 @@ LOCK_DURATION = timedelta(seconds=120)
 # The number of paragraphs per page.
 PAGE_SIZE = 10
 
+# Twitter configuration.
+TWITTER_USERNAME = ''
+TWITTER_USER_KEY = ''
+TWITTER_USER_SECRET = ''
+TWITTER_CONSUMER_KEY = ''
+TWITTER_CONSUMER_SECRET = ''
+
 # Number of votes required to accept or deny a paragraph.
 VOTES_REQUIRED = 3
 

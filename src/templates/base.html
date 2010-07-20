@@ -11,7 +11,10 @@
     <div id="app">
         <div id="content">{% block page_content %}{% endblock %}</div>
     </div>
-    <p id="footer"><a href="http://github.com/blixt/storyteller">Source code available at GitHub &raquo;</a></p>
+    <p id="footer">
+        <a id="github" href="http://github.com/blixt/storyteller">Source code available at GitHub &raquo;</a>
+        {% if settings.TWITTER_USERNAME %}<a id="twitter" href="http://www.twitter.com/{{ settings.TWITTER_USERNAME }}">@{{ settings.TWITTER_USERNAME }}</a>{% endif %}
+    </p>
     <!-- Google Analytics -->
     <script type="text/javascript">
     var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
