@@ -58,11 +58,14 @@ function update() {
             if (section) $(section).slideDown();
             visibleSection = section;
         }
+
+        setTimeout(update, 5000);
+    }, function (data) {
+        setTimeout(update, 2500);
     });
 }
 
 update();
-setInterval(update, 1000);
 
 $('#paragraph')
     .before('<p id="chars">140</p>')
