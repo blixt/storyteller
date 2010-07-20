@@ -67,10 +67,12 @@ function update() {
 
 update();
 
+var locking = false;
 $('#paragraph')
     .before('<p id="chars">140</p>')
     .keydown(function () {
-        if (interval || auth) return;
+        if (interval || auth || locking) return;
+        locking = true;
         api('lock_story', {id: storyId},
             function (data) {
                 auth = data.response.auth;
@@ -87,11 +89,13 @@ $('#paragraph')
                     }
                     $('#lock-info strong').text(seconds + ' second' + (seconds == 1 ? '' : 's'));
                 }, 1000);
+                locking = false;
             },
             function (data) {
                 $('#lock-info')
                     .addClass('error')
                     .html(data.response);
+                locking = false;
             });
     })
     .keyup(function () {
