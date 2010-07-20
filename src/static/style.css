@@ -137,7 +137,7 @@ textarea:focus {
     border-radius: 5px;
     -khtml-border-radius: 5px;
     -moz-border-radius: 5px;
-    margin: 30px auto;
+    margin: 30px auto 5px;
     padding: 17px;
     width: 640px;
 }
@@ -172,6 +172,24 @@ textarea:focus {
 
 #continue {
     position: relative;
+}
+
+#footer {
+    margin: 0 auto 30px;
+    padding: 0 17px;
+    text-align: right;
+    width: 640px;
+}
+
+#footer a {
+    color: #888;
+    font-size: 17px;
+    text-decoration: none;
+    text-shadow: -1px -1px #111;
+}
+
+#footer a:hover {
+    color: #fff;
 }
 
 #lock-info {
