@@ -1,3 +1,4 @@
+/src/app.yaml
 /src/storyteller/settings.py
 *.pyc
 *.swp

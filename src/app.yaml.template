@@ -1,5 +1,5 @@
-application: collaborative-stories
-version: 1
+application: example
+version: release
 runtime: python
 api_version: 1
 
