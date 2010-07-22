@@ -35,7 +35,7 @@ ANALYTICS_TRACKER_ID = ''
 LOCK_DURATION = timedelta(seconds=120)
 
 # The number of paragraphs per page.
-PAGE_SIZE = 10
+PAGE_SIZE = 20
 
 # Twitter configuration.
 TWITTER_USERNAME = ''
