@@ -93,8 +93,10 @@ def add_paragraph(handler, story_id, paragraph_number, text):
         # Since the branch count is cached in the list of branches, the cached
         # parent of the base paragraph will need to be purged.
         parent_key = base_paragraph._entity['follows']
-        keys.append('paragraph:%d:%s' % (parent_key.parent().id(),
-                                         parent_key.name()))
+        if parent_key:
+            # The first paragraph in a story won't have a parent.
+            keys.append('paragraph:%d:%s' % (parent_key.parent().id(),
+                                             parent_key.name()))
 
     memcache.delete_multi(keys)
 
