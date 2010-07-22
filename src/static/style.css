@@ -190,13 +190,14 @@ textarea:focus {
     border-radius: 5px;
     -khtml-border-radius: 5px;
     -moz-border-radius: 5px;
-    margin: 30px auto 5px;
+    margin: 30px auto 7px;
     padding: 17px;
     width: 640px;
 }
 
 #footer {
     height: 22px;
+    left: 0;
     margin: 0 auto 30px;
     padding: 0 17px;
     width: 640px;
