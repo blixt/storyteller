@@ -98,15 +98,24 @@ def _create_paragraph(paragraph_key, text):
     if not story:
         raise storyteller.StoryNotFoundError(
             'Could not find the specified story.')
-    paragraph = Paragraph.get(paragraph_key)
-    if not paragraph:
-        raise storyteller.ParagraphNotFoundError(
-            'Could not find the specified paragraph.')
 
-    if story.length != paragraph.number:
-        # Cannot continue story since it has already been continued. A branch
-        # should be created instead.
-        return paragraph, story, None, True
+    if story.length == 0 and paragraph_key.name() == '0':
+        # Handle empty stories differently.
+        paragraph = None
+        paragraph_key = None
+    else:
+        paragraph = Paragraph.get(paragraph_key)
+        if not paragraph:
+            raise storyteller.ParagraphNotFoundError(
+                'Could not find the specified paragraph.')
+
+        if story.length != paragraph.number:
+            # Cannot continue story since it has already been continued. A branch
+            # should be created instead.
+            return paragraph, story, None, True
+
+        paragraph.num_branches += 1
+        paragraph.put()
 
     story.length += 1
     story.put()
@@ -118,9 +127,6 @@ def _create_paragraph(paragraph_key, text):
         follows=paragraph_key,
         text=text)
     new_paragraph.put()
-
-    paragraph.num_branches += 1
-    paragraph.put()
 
     return paragraph, story, new_paragraph, False
 

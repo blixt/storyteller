@@ -12,7 +12,7 @@
 {% endfor %}
 </div>
 <input name="story_id" type="hidden" value="{{ story.id }}">
-<input name="paragraph_number" type="hidden" value="{{ paragraph.number }}">
+<input name="paragraph_number" type="hidden" value="{% if paragraph %}{{ paragraph.number }}{% else %}0{% endif %}">
 <textarea class="paragraph" id="paragraph" name="text" placeholder="Write the next paragraph here!" cols="70" rows="3"></textarea>
 <button disabled id="add">Add it!</button>
 {% if paragraph.branches %}
