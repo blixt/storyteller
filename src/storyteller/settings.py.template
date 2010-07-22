@@ -31,9 +31,6 @@ NOT_FOUND_TEMPLATE = '404.html'
 # The Google Analytics tracker id.
 ANALYTICS_TRACKER_ID = ''
 
-# The time that a story is locked to a user.
-LOCK_DURATION = timedelta(seconds=120)
-
 # The number of paragraphs per page.
 PAGE_SIZE = 20
 
@@ -43,9 +40,6 @@ TWITTER_USER_KEY = ''
 TWITTER_USER_SECRET = ''
 TWITTER_CONSUMER_KEY = ''
 TWITTER_CONSUMER_SECRET = ''
-
-# Number of votes required to accept or deny a paragraph.
-VOTES_REQUIRED = 3
 
 # Store the current version of the deployed application.
 VERSION = os.environ['CURRENT_VERSION_ID']

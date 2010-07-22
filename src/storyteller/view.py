@@ -168,16 +168,32 @@ class ApiHandler(TemplatedRequestHandler):
         res.out.write(simplejson.dumps(result, separators=(',', ':')))
 
 class StoryHandler(TemplatedRequestHandler):
-    def get(self, id=None):
-        if id is not None:
-            id = int(id)
+    def get(self, story_id=None, paragraph_number=None):
+        if story_id is not None:
+            story_id = int(story_id)
 
-        story = controller.get_story(self, id)
-        if not id:
+        try:
+            story = controller.get_story(self, story_id)
+        except storyteller.NotFoundError:
+            self.not_found()
+            return
+
+        if not story_id:
             self.redirect('/%d' % story['id'])
             return
 
-        self.render('story.html', story=story)
+        if paragraph_number is None:
+            paragraph_number = story['length']
+        else:
+            paragraph_number = int(paragraph_number)
+            if not 1 <= paragraph_number <= story['length']:
+                raise ValueError('Invalid paragraph number.')
+            if paragraph_number < story['length']:
+                del story['paragraphs'][paragraph_number:]
+        paragraph = controller.get_paragraph(self, story_id,
+                                             paragraph_number)
+
+        self.render('story.html', story=story, paragraph=paragraph)
 
 class NotFoundHandler(TemplatedRequestHandler):
     def get(self):

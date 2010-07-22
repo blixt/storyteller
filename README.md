@@ -25,7 +25,7 @@ How to get a newly cloned version up and running in a local development environm
 The Storyteller application does everything through a controller which communicates with the data layer. All the public methods of the controller are accessible using HTTP requests. Examples:
 
 - Get information about a story: <http://story.multifarce.com/api/get_story?id=1>
-- Suggest a paragraph for a story: <http://story.multifarce.com/api/suggest_paragraph?story_id=1001&text="Hello+World!">
+- Add a paragraph to a story (branching it if needed): <http://story.multifarce.com/api/add_paragraph?story_id=1001&paragraph_number=5&text=%22Hello+World!%22>
 
 Currently, no authentication is needed, but once it starts getting abused, that will be implemented in one form or another.
 

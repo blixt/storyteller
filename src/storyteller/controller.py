@@ -34,6 +34,7 @@ import storyteller
 from storyteller import model, settings, utils
 from storyteller.utils import public
 
+
 def _get_paragraphs(story, page=None):
     if page < 1:
         page = 1
@@ -52,69 +53,89 @@ def _get_paragraphs(story, page=None):
     start = (page - 1) * settings.PAGE_SIZE + 1
     end = start + settings.PAGE_SIZE - 1
 
-    data = [{'number': p.number, 'text': p.text, 'created': p.created}
+    data = [{'story_id': p.key().parent().id(), 'number': p.number,
+             'created': p.created, 'text': p.text,
+             'num_branches': p.num_branches}
             for p in model.Paragraph.get_range(story, start, end)]
     memcache.set(cache_key, data)
 
     return data
 
-def _set_can_vote(handler, story_data):
-    if story_data['state'] == 'pending':
-        ip = handler.request.remote_addr
-        story_data['can_vote'] = ip not in story_data['pending_yes'] and \
-                                 ip not in story_data['pending_no']
-        del story_data['pending_yes']
-        del story_data['pending_no']
-    return story_data
-
-def _vote(handler, story_id, keep):
-    story, paragraph = model.Story.vote(
-        story_id, handler.request.remote_addr, keep)
-
-    if paragraph:
-        page = (story.length - 1) / settings.PAGE_SIZE + 1
-        memcache.delete_multi([
-            'story:%d' % story_id,
-            'paragraphs:%d:%d' % (story_id, page)])
-
-        # Only tweet for one story (currently id 1).
-        if settings.TWITTER_USERNAME and story.key().id() == 1:
-            utils.oauth_req(
-                'http://api.twitter.com/1/statuses/update.json',
-                'POST', 'status=%s' % paragraph.text)
-    else:
-        memcache.delete('story:%d' % story_id)
 
 @public
-def branch_story(handler, id, paragraph=None):
-    """Branches a story, allowing users to write an alternate version parallel
-    to the original. If a paragraph is specified, the story will branch at that
-    paragraph, otherwise it will branch at the latest paragraph of the story.
+def add_paragraph(handler, story_id, paragraph_number, text):
+    """Adds a new paragraph after a certain paragraph. Note that this might
+    branch the story and return a different story id than the one that was
+    passed in. Check the "branched" boolean to see if this has happened.
 
     """
-    new_story = model.Story.branch(id, paragraph)
-    return new_story.key().id()
+    base_paragraph, story, paragraph, branched = model.Story.add_paragraph(
+        story_id, paragraph_number, text)
+
+    # Keep in mind in the code below that story_id refers to the original story
+    # and story.length could be the length of a new story (and thus very
+    # different from the length of the original story).
+    page = (story.length - 1) / settings.PAGE_SIZE + 1
+
+    keys = ['paragraph:%d:%d' % (story_id, paragraph_number),
+            'paragraphs:%d:%d' % (story_id, page)]
+    if page == 1:
+        # Since story data is returned with the first page, the story cache
+        # needs to be purged.
+        keys.append('story:%d' % story_id)
+    elif story.length % settings.PAGE_SIZE == 1:
+        # This is the first paragraph of a page, meaning that the previous page
+        # needs to be purged as well (so that the new num_branches value can be
+        # returned).
+        keys.append('paragraphs:%d:%d' % (story_id, page - 1))
+
+    if branched:
+        # Since the branch count is cached in the list of branches, the cached
+        # parent of the base paragraph will need to be purged.
+        parent_key = base_paragraph._entity['follows']
+        keys.append('paragraph:%d:%s' % (parent_key.parent().id(),
+                                         parent_key.name()))
+
+    memcache.delete_multi(keys)
+
+    # Only tweet for one story (currently id 1).
+    # Twitter is currently disabled since with no voting, abuse is easy.
+    #if settings.TWITTER_USERNAME and story.key().id() == 1:
+    #    utils.oauth_req(
+    #        'http://api.twitter.com/1/statuses/update.json',
+    #        'POST', 'status=%s' % paragraph.text)
+
+    return {'story_id': story.key().id(), 'paragraph_number': paragraph.number,
+            'branched': branched}
 
 @public
-def get_paragraphs(handler, story_id, page=None):
-    """Retrieves one page of paragraphs from the specified story.
+def get_paragraph(handler, story_id, number):
+    """Retrieves a single paragraph and its branches.
 
     """
-    if not isinstance(page, (int, long)) or page < 1:
-        raise TypeError('Page must be a positive number.')
+    if not isinstance(story_id, (int, long)):
+        raise TypeError('Story id must be an integer.')
+    if not isinstance(number, (int, long)):
+        raise TypeError('Paragraph number must be an integer.')
 
-    data = _get_paragraphs(story_id, page)
+    cache_key = 'paragraph:%d:%d' % (story_id, number)
+    data = memcache.get(cache_key)
+    if data:
+        return data
 
-    # Allow full (and thus static) pages to be cached by clients and Frontend.
-    if len(data) == settings.PAGE_SIZE:
-        cache_time = timedelta(days=365)
-        expires = datetime.now() + cache_time
+    story_key = model.get_key(story_id, 'Story')
+    paragraph = model.Paragraph.get_by_key_name(str(number), parent=story_key)
+    if not paragraph:
+        raise storyteller.ParagraphNotFoundError('Paragraph not found.')
 
-        res = handler.response
-        res.headers['Expires'] = expires.strftime('%a, %d %b %Y %H:%M:%S GMT')
-        res.headers['Cache-Control'] = 'public, max-age=%d' % (
-            cache_time.days * 86400 + cache_time.seconds)
+    data = {'story_id': story_id, 'number': paragraph.number,
+            'created': paragraph.created, 'text': paragraph.text,
+            'branches': [{'story_id': p.key().parent().id(),
+                          'number': p.number, 'created': p.created,
+                          'text': p.text, 'num_branches': p.num_branches}
+                         for p in paragraph.branches]}
 
+    memcache.set(cache_key, data)
     return data
 
 @public
@@ -123,12 +144,12 @@ def get_story(handler, id=None):
     
     """
     if id is not None and not isinstance(id, (int, long)):
-        raise TypeError('Id must be a number.')
+        raise TypeError('Story id must be an integer.')
 
     if id:
         data = memcache.get('story:%d' % id)
         if data:
-            return _set_can_vote(handler, data)
+            return data
 
         story = model.Story.get_by_id(id)
         if not story:
@@ -143,62 +164,13 @@ def get_story(handler, id=None):
 
         data = memcache.get('story:%d' % id)
         if data:
-            return _set_can_vote(handler, data)
+            return data
 
-    data = {'id': id, 'length': story.length, 'state': story.get_state()}
+    data = {'id': id, 'length': story.length,
+            'branches': [{'story_id': b.parent().id(),
+                          'paragraph_number': int(b.name())}
+                         for b in story.branches],
+            'paragraphs': _get_paragraphs(story)}
 
-    cache_time = None
-    if data['state'] == 'locked':
-        cache_time = (story.lock - datetime.now()).seconds - 1
-    elif data['state'] == 'pending':
-        data.update({
-            'paragraph': story.pending_text,
-            'pending_yes': story.pending_yes,
-            'pending_no': story.pending_no,
-            'yes_votes': len(story.pending_yes),
-            'no_votes': len(story.pending_no)})
-
-    data['paragraphs'] = _get_paragraphs(story)
-
-    if cache_time is None:
-        memcache.set('story:%d' % id, data)
-    elif cache_time > 0:
-        memcache.set('story:%d' % id, data, cache_time)
-
-    return _set_can_vote(handler, data)
-
-@public
-def lock_story(handler, id):
-    """Lock a story from editing by others. The authentication key returned
-    must be used to add a paragraph to the story while it is locked. The lock
-    will time out after a while.
-
-    """
-    story = model.Story.get_lock(id)
-    memcache.delete('story:%d' % id)
-    return {'auth': story.auth, 'time': story.lock - datetime.now()}
-
-@public
-def suggest_paragraph(handler, story_id, text, auth=None):
-    """Suggests a new paragraph to a story.
-
-    """
-    if not isinstance(text, basestring):
-        raise TypeError('Invalid text.')
-    model.Story.new_paragraph(
-        story_id, text, handler.request.remote_addr, auth)
-    memcache.delete('story:%d' % story_id)
-
-@public
-def vote_no(handler, story_id):
-    """Vote to delete the currently pending paragraph.
-
-    """
-    _vote(handler, story_id, False)
-
-@public
-def vote_yes(handler, story_id):
-    """Vote to keep the currently pending paragraph.
-
-    """
-    _vote(handler, story_id, True)
+    memcache.set('story:%d' % id, data)
+    return data

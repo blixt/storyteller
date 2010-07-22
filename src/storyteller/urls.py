@@ -22,7 +22,7 @@ from storyteller import view
 
 urlpatterns = (
     # Content pages
-    (r'/(\d+)?', view.StoryHandler),
+    (r'/(\d+)?(?:/(\d+))?', view.StoryHandler),
 
     # API handler
     (r'/api/(\w+)', view.ApiHandler),

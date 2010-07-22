@@ -19,6 +19,7 @@
 #
 
 from datetime import datetime
+import logging
 import string
 import uuid
 
@@ -31,11 +32,12 @@ def get_key(value, kind, parent=None):
     """Returns a key from value.
 
     """
-    if issubclass(kind, db.Model):
-        kind = kind.kind()
-    elif not isinstance(kind, basestring):
-        raise TypeError('Invalid type (kind); should be a Model subclass or a '
-                        'string.')
+    if not isinstance(kind, basestring):
+        if issubclass(kind, db.Model):
+            kind = kind.kind()
+        else:
+            raise TypeError(
+                'Invalid type (kind); should be a Model subclass or a string.')
 
     if isinstance(value, db.Key):
         assert value.kind() == kind, 'Tried to use a Key of the wrong kind.'
@@ -74,87 +76,52 @@ def get_instance(value, model, parent=None):
                         'or %s.' % model.__name__)
 
 
-def _lock_story(story_key):
-    story = db.get(story_key)
-    if not story:
-        raise storyteller.StoryNotFoundError('Story not found.')
+def _create_branch(story, paragraph, text):
+    new_story = Story(
+        branches=story.branches + [paragraph.key()],
+        length=paragraph.number + 1)
+    new_story.put()
 
-    story._do_auth()
-    story.lock = datetime.now() + settings.LOCK_DURATION
+    new_paragraph = Paragraph(
+        key_name=str(new_story.length),
+        parent=new_story.key(),
+        number=new_story.length,
+        follows=paragraph.key(),
+        text=text)
+    new_paragraph.put()
+
+    return new_story, new_paragraph
+
+def _create_paragraph(paragraph_key, text):
+    story = Story.get(paragraph_key.parent())
+    if not story:
+        raise storyteller.StoryNotFoundError(
+            'Could not find the specified story.')
+    paragraph = Paragraph.get(paragraph_key)
+    if not paragraph:
+        raise storyteller.ParagraphNotFoundError(
+            'Could not find the specified paragraph.')
+
+    if story.length != paragraph.number:
+        # Cannot continue story since it has already been continued. A branch
+        # should be created instead.
+        return paragraph, story, None, True
+
+    story.length += 1
     story.put()
 
-    return story
+    new_paragraph = Paragraph(
+        key_name=str(story.length),
+        parent=story.key(),
+        number=story.length,
+        follows=paragraph_key,
+        text=text)
+    new_paragraph.put()
 
-def _new_paragraph(story_key, paragraph, ip, auth=None):
-    if len(paragraph) < 5:
-        raise ValueError('That paragraph is too short.')
-    if len(paragraph) > 140:
-        raise ValueError('That paragraph is too long.')
+    paragraph.num_branches += 1
+    paragraph.put()
 
-    story = db.get(story_key)
-    if not story:
-        raise storyteller.StoryNotFoundError('Story not found.')
-
-    story._do_auth(auth)
-    story.lock = None
-    story.pending = True
-    story.pending_text = paragraph
-    story.pending_yes = [ip]
-    story.pending_no = []
-    story.put()
-
-    return story
-
-def _vote(story_key, ip, keep):
-    if not isinstance(ip, basestring):
-        raise TypeError('IP must be a string.')
-
-    story = db.get(story_key)
-    if not story:
-        raise storyteller.StoryNotFoundError('Story not found.')
-
-    if not story.pending:
-        raise storyteller.VotesNotPossibleError(
-            'It is currently not possible to vote on that story.')
-
-    if ip in story.pending_yes:
-        if keep:
-            return story, None
-        story.pending_yes.remove(ip)
-    elif ip in story.pending_no:
-        if not keep:
-            return story, None
-        story.pending_no.remove(ip)
-
-    if keep:
-        story.pending_yes.append(ip)
-        if len(story.pending_yes) >= settings.VOTES_REQUIRED:
-            story.length += 1
-            paragraph = Paragraph(
-                key_name=str(story.length),
-                parent=story,
-                number=story.length,
-                text=story.pending_text)
-            paragraph.put()
-        else:
-            story.put()
-            return story, None
-    else:
-        story.pending_no.append(ip)
-        if len(story.pending_no) < settings.VOTES_REQUIRED:
-            story.put()
-            return story, None
-        paragraph = None
-
-    # This code is only reached if the voting has finished.
-    story.auth = None
-    story.pending = False
-    story.pending_text = None
-    story.pending_yes = []
-    story.pending_no = []
-    story.put()
-
-    return story, paragraph
+    return paragraph, story, new_paragraph, False
 
 
 class Story(db.Model):
@@ -162,111 +129,79 @@ class Story(db.Model):
     length = db.IntegerProperty(default=0)
     created = db.DateTimeProperty(auto_now_add=True)
     updated = db.DateTimeProperty(auto_now=True)
-    auth = db.StringProperty(indexed=False)
-    lock = db.DateTimeProperty()
-    pending = db.BooleanProperty()
-    pending_text = db.StringProperty(indexed=False)
-    pending_yes = db.StringListProperty(indexed=False)
-    pending_no = db.StringListProperty(indexed=False)
 
     @classmethod
-    def branch(cls, story, paragraph=None):
-        story = get_instance(story, Story)
+    def add_paragraph(cls, story_id, paragraph_number, text):
+        """Adds a paragraph to a story. Does not save anything to the
+        datastore.
 
-        branch = cls(length=story.length)
-        p = get_instance(paragraph or str(story.length), Paragraph,
-                         parent=story.key())
-        if p:
-            branch.branches = story.branches + [p.key()]
-        elif paragraph:
-            # The specified paragraph didn't exist.
-            raise storyteller.ParagraphNotFoundError(
-                'The specified paragraph could not be found.')
-        else:
-            # The story that is being branched didn't have any paragraphs.
-            # Instead, branch the story that the specified story branches.
-            branch.branches.extend(story.branches)
-        branch.put()
+        Takes the id of a story and the number of the paragraph to add after.
 
-        return branch
+        Returns the paragraph being continued, the story instance used, the
+        paragraph instance created and a boolean indicating whether the story
+        used was a new branch (True) or the story that was specified originally
+        (False).
 
-    @classmethod
-    def get_lock(cls, story):
-        return db.run_in_transaction(_lock_story, get_key(story, cls))
-
-    @classmethod
-    def new_paragraph(cls, story, paragraph, ip, auth=None):
-        return db.run_in_transaction(_new_paragraph,
-            get_key(story, cls), paragraph, ip, auth)
-
-    @classmethod
-    def vote(cls, story, ip, keep):
-        return db.run_in_transaction(_vote,
-            get_key(story, cls), ip, keep)
-
-    def _do_auth(self, auth=None):
-        """Checks whether a person may change a story. The story either needs
-        to be in an editable state, or the person needs to provide a valid
-        authentication key.
-
-        If no error is raised, the person has been authenticated successfully.
-
-        This function may change the auth attribute. If the new auth value is
-        passed on, it's very important that the story is put to the datastore
-        so that data consistency is kept.
-        
         """
-        if self.auth and auth == self.auth:
-            return
-        if self.is_locked():
-            raise storyteller.StoryLockedError(
-                'The story is locked and can only be changed by the person '
-                'who locked it.')
-        if self.pending:
-            raise storyteller.StoryPendingError(
-                'The story currently has a pending paragraph and needs votes '
-                'before it can be changed.')
+        if not isinstance(story_id, (int, long)):
+            raise TypeError('Story id must be an integer.')
+        if not isinstance(paragraph_number, (int, long)):
+            raise TypeError('Paragraph number must be an integer.')
+        if not isinstance(text, basestring):
+            raise TypeError('Invalid text; it must be a string.')
 
-        self.auth = uuid.uuid4().get_hex()
+        if len(text) < 5:
+            raise ValueError('That paragraph is too short.')
+        if len(text) > 140:
+            raise ValueError('That paragraph is too long.')
 
-    def get_state(self):
-        if self.is_editable():
-            return 'open'
-        elif self.is_locked():
-            return 'locked'
-        elif self.pending:
-            return 'pending'
-        else:
-            raise storyteller.Error('Story has an unknown state.')
+        story_key = db.Key.from_path('Story', story_id)
+        paragraph_key = db.Key.from_path('Paragraph', str(paragraph_number),
+                                         parent=story_key)
 
-    def is_editable(self, auth=None):
-        if auth and auth == self.auth:
-            return True
-        if self.pending:
-            return False
-        return not self.is_locked()
+        base_paragraph, story, paragraph, needs_branch = db.run_in_transaction(
+            _create_paragraph, paragraph_key, text)
+        if not needs_branch:
+            return base_paragraph, story, paragraph, False
 
-    def is_locked(self):
-        if not self.lock:
-            return False
-        return datetime.now() < self.lock
+        # A paragraph was never created, which means a branch is needed to
+        # continue from the specified paragraph.
+        new_story, new_paragraph = db.run_in_transaction(_create_branch,
+            story, base_paragraph, text)
+        try:
+            # This part has to run outside a transaction since the branched
+            # story is stored in a different entity group.
+            base_paragraph.num_branches += 1
+            base_paragraph.put()
+        except:
+            logging.exception(
+                'Failed to increment branch count for a paragraph:')
+        return base_paragraph, new_story, new_paragraph, True
 
 class Paragraph(db.Model):
     number = db.IntegerProperty(required=True)
     created = db.DateTimeProperty(auto_now_add=True)
     text = db.StringProperty(indexed=False, required=True)
+    follows = db.SelfReferenceProperty(collection_name='branches')
+    num_branches = db.IntegerProperty(default=0)
+    good = db.ListProperty(int, indexed=False)
+    bad = db.ListProperty(int, indexed=False)
 
     @classmethod
-    def get_range(cls, story, start, end):
+    def get_range(cls, story, start=1, end=None):
         """Gets a range of paragraphs from the specified story. This function
         takes branching into consideration, and may return paragraphs that
         belong to a story that the specified story was branched off of.
+
+        The range defaults to all paragraphs for the specified story.
 
         """
         # Build a list of keys, fetching from the appropriate stories if the
         # story has been branched.
         keys = []
         story = get_instance(story, Story)
+        if not end:
+            end = story.length
         branch_end = 0
         for branch in story.branches:
             branch_start = branch_end + 1
@@ -281,17 +216,18 @@ class Paragraph(db.Model):
                 if i > end:
                     # The key list has been built. Exit the loop.
                     break
-                keys.append(db.Key.from_path('Paragraph', str(i),
-                            parent=branch.parent()))
+                keys.append(db.Key.from_path(cls.kind(), str(i),
+                                             parent=branch.parent()))
+            # This is a trick to allow the above break statement to break
+            # two levels of for loops.
             else:
-                # This is a trick to allow the above break statement to break
-                # two levels of for loops.
                 continue
             break
 
         # Any remaining paragraphs are from the current story.
         for i in xrange(start + len(keys), end + 1):
-            keys.append(db.Key.from_path('Paragraph', str(i), parent=story.key()))
+            keys.append(db.Key.from_path(cls.kind(), str(i),
+                                         parent=story.key()))
 
         paragraphs = db.get(keys)
         return paragraphs[:paragraphs.index(None)]
