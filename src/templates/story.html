@@ -7,8 +7,8 @@
 {% for p in story.paragraphs %}
     <p title="#{{ p.number }} {{ p.created|date:"F j, Y H:i" }} ({{ p.num_branches }} branch{{ p.num_branches|pluralize:"es" }})"><a href="/{{ p.story_id }}/{{ p.number }}">{{ p.text }}</a></p>
 {% empty %}
-    <p class="empty">This story is still in its early stages and does not have any text yet!</p>
-    <p class="empty">Follow the instructions below if you want to contribute.</p>
+    <p class="empty">This story is still in its early stages and does not have any text yet.</p>
+    <p class="empty">Enter the first paragraph below to get it started!</p>
 {% endfor %}
 </div>
 <input name="story_id" type="hidden" value="{{ story.id }}">
