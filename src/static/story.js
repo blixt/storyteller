@@ -31,14 +31,13 @@ $('#paragraph')
     .keyup(function () {
         var left = 140 - this.value.length;
         $('#chars')
-            .text(left + ' character' + (left == 1 ? '' : 's') + ' left')
+            .text(left + ' character' + (Math.abs(left) == 1 ? '' : 's') + ' left')
             .toggleClass('close-to-limit', left >= 0 && left <= 25)
             .toggleClass('past-limit', left < 0);
         $('#add').attr('disabled', left > 135 || left < 0);
     });
 
 $('#add')
-    .after('<p id="chars">140 characters left</p>')
     .click(function () {
         api('add_paragraph',
             {story_id: storyId, paragraph_number: paragraphNumber,

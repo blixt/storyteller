@@ -47,7 +47,6 @@ h1, h2 {
     color: #ff006f;
     line-height: 1.5;
     margin: 0;
-    /*text-shadow: 0 1px 2px rgba(255, 0, 111, .3);*/
     text-shadow: 0 1px 1px rgba(0, 0, 0, .3);
 }
 
@@ -186,7 +185,7 @@ textarea:focus {
 }
 
 #content_outside { /* #content::outside */
-    background: #2f2f2f;
+    background: #282828;
     border-radius: 5px;
     -khtml-border-radius: 5px;
     -moz-border-radius: 5px;
