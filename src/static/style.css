@@ -82,6 +82,7 @@ pre {
 }
 
 textarea {
+    background: #fff;
     border: #aaa solid 1px;
     border-radius: 3px;
     -khtml-border-radius: 3px;
