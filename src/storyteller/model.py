@@ -20,6 +20,7 @@
 
 from datetime import datetime
 import logging
+import re
 import string
 import uuid
 
@@ -149,6 +150,9 @@ class Story(db.Model):
             raise TypeError('Paragraph number must be an integer.')
         if not isinstance(text, basestring):
             raise TypeError('Invalid text; it must be a string.')
+
+        # Replace repeating spaces, newlines, etc. with single spaces.
+        text = re.sub(r'\s+', ' ', text)
 
         if len(text) < 5:
             raise ValueError('That paragraph is too short.')
