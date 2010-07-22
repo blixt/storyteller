@@ -187,11 +187,16 @@ class StoryHandler(TemplatedRequestHandler):
         else:
             paragraph_number = int(paragraph_number)
             if not 1 <= paragraph_number <= story['length']:
-                raise ValueError('Invalid paragraph number.')
+                self.not_found()
+                return
             if paragraph_number < story['length']:
                 del story['paragraphs'][paragraph_number:]
-        paragraph = controller.get_paragraph(self, story_id,
-                                             paragraph_number)
+
+        if paragraph_number:
+            paragraph = controller.get_paragraph(self, story_id,
+                                                 paragraph_number)
+        else:
+            paragraph = None
 
         self.render('story.html', story=story, paragraph=paragraph)
 
