@@ -157,7 +157,7 @@ class ApiHandler(TemplatedRequestHandler):
         except BaseException, e:
             logging.exception('API error:')
 
-            res.set_status(500)
+            res.set_status(400)
             result = {'status': 'error',
                       'response': str(e),
                       'module': type(e).__module__,
