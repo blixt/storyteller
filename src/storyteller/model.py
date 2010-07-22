@@ -157,8 +157,9 @@ class Story(db.Model):
         if not isinstance(text, basestring):
             raise TypeError('Invalid text; it must be a string.')
 
-        # Replace repeating spaces, newlines, etc. with single spaces.
-        text = re.sub(r'\s+', ' ', text)
+        # Replace repeating spaces, newlines, etc. with single spaces and trim
+        # the text.
+        text = re.sub(r'\s+', ' ', text).strip()
 
         if len(text) < 5:
             raise ValueError('That paragraph is too short.')
