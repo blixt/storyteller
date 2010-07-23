@@ -187,6 +187,9 @@ textarea:focus {
 
 #content_outside { /* #content::outside */
     background: #282828;
+    border-color: #252525 #444 #444 #252525;
+    border-style: solid;
+    border-width: 1px;
     border-radius: 5px;
     -khtml-border-radius: 5px;
     -moz-border-radius: 5px;
