@@ -161,9 +161,9 @@ class Story(db.Model):
         # the text.
         text = re.sub(r'\s+', ' ', text).strip()
 
-        if len(text) < 5:
+        if len(text) < 10:
             raise ValueError('That paragraph is too short.')
-        if len(text) > 140:
+        if len(text) > 250:
             raise ValueError('That paragraph is too long.')
 
         story_key = db.Key.from_path('Story', story_id)

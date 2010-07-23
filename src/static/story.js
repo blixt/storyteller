@@ -27,12 +27,12 @@ function api(method, args, success, error) {
 
 $('#paragraph')
     .keyup(function () {
-        var left = 140 - this.value.length;
+        var left = 250 - this.value.length;
         $('#chars')
             .text(left + ' character' + (Math.abs(left) == 1 ? '' : 's') + ' left')
             .toggleClass('close-to-limit', left >= 0 && left <= 25)
             .toggleClass('past-limit', left < 0);
-        $('#add').attr('disabled', left > 135 || left < 0);
+        $('#add').attr('disabled', left > 240 || left < 0);
     });
 
 $('#add')

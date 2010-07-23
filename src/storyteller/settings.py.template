@@ -34,13 +34,6 @@ ANALYTICS_TRACKER_ID = ''
 # The number of paragraphs per page.
 PAGE_SIZE = 20
 
-# Twitter configuration.
-TWITTER_USERNAME = ''
-TWITTER_USER_KEY = ''
-TWITTER_USER_SECRET = ''
-TWITTER_CONSUMER_KEY = ''
-TWITTER_CONSUMER_SECRET = ''
-
 # Store the current version of the deployed application.
 VERSION = os.environ['CURRENT_VERSION_ID']
 

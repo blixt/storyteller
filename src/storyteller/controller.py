@@ -100,13 +100,6 @@ def add_paragraph(handler, story_id, paragraph_number, text):
 
     memcache.delete_multi(keys)
 
-    # Only tweet for one story (currently id 1).
-    # Twitter is currently disabled since with no voting, abuse is easy.
-    #if settings.TWITTER_USERNAME and story.key().id() == 1:
-    #    utils.oauth_req(
-    #        'http://api.twitter.com/1/statuses/update.json',
-    #        'POST', 'status=%s' % paragraph.text)
-
     return {'story_id': story.key().id(), 'paragraph_number': paragraph.number,
             'branched': branched}
 

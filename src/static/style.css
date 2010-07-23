@@ -224,8 +224,3 @@ textarea:focus {
 #story p.empty {
     opacity: .5;
 }
-
-#twitter {
-    background: url(http://twitter-badges.s3.amazonaws.com/t_small-c.png) 0 50% no-repeat;
-    padding-left: 25px;
-}
