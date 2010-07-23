@@ -60,7 +60,7 @@ h2 {
 }
 
 html {
-    background: #333;
+    background: #333 url(bg.gif);
 }
 
 ol, p, pre, ul {
@@ -178,7 +178,7 @@ textarea:focus {
 }
 
 #content {
-    background: #fffff4;
+    background: #fffff4 url(bgbright.gif);
     border-radius: 3px;
     -khtml-border-radius: 3px;
     -moz-border-radius: 3px;
@@ -186,7 +186,7 @@ textarea:focus {
 }
 
 #content_outside { /* #content::outside */
-    background: #282828;
+    background: #282828 url(bgdark.gif);
     border-color: #252525 #444 #444 #252525;
     border-style: solid;
     border-width: 1px;
