@@ -1,5 +1,3 @@
-var storyId = parseInt($('input[name=story_id]').val()), paragraphNumber = parseInt($('input[name=paragraph_number]').val());
-
 function api(method, args, success, error) {
     for (var name in args) {
         args[name] = JSON.stringify(args[name]);
@@ -40,7 +38,7 @@ $('#paragraph')
 $('#add')
     .click(function () {
         api('add_paragraph',
-            {story_id: storyId, paragraph_number: paragraphNumber,
+            {story_id: story.id, paragraph_number: paragraph.number,
              text: $('#paragraph').val()},
             function (data) {
                 location.href = '/' + data.response.story_id + '/' + data.response.paragraph_number;

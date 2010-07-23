@@ -33,6 +33,11 @@ from google.appengine.ext.webapp import template
 import storyteller
 from storyteller import controller, settings
 
+
+def _json(data):
+    return simplejson.dumps(jsonify(data), separators=(',', ':'))
+
+
 class TemplatedRequestHandler(webapp.RequestHandler):
     """Simplifies handling requests. In particular, it simplifies working
     with templates, with its render() method.
@@ -198,7 +203,9 @@ class StoryHandler(TemplatedRequestHandler):
         else:
             paragraph = None
 
-        self.render('story.html', story=story, paragraph=paragraph)
+        self.render('story.html',
+            json_story=_json(story), story=story,
+            json_paragraph=_json(paragraph), paragraph=paragraph)
 
 class NotFoundHandler(TemplatedRequestHandler):
     def get(self):
