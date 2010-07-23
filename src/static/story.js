@@ -38,7 +38,7 @@ $('#paragraph')
 $('#add')
     .click(function () {
         api('add_paragraph',
-            {story_id: story.id, paragraph_number: paragraph.number,
+            {story_id: story.id, paragraph_number: (paragraph ? paragraph.number : 0),
              text: $('#paragraph').val()},
             function (data) {
                 location.href = '/' + data.response.story_id + '/' + data.response.paragraph_number;
@@ -48,4 +48,18 @@ $('#add')
                 alert(data.response);
             });
         $('#add, #paragraph').attr('disabled', true);
+    });
+
+$('#new-story')
+    .click(function () {
+        api('create_story',
+            {},
+            function (data) {
+                location.href = '/' + data.response.story_id;
+            },
+            function (data) {
+                $('#new-story').attr('disabled', false);
+                alert(data.response);
+            });
+        $('#new-story').attr('disabled', true);
     });

@@ -104,6 +104,16 @@ def add_paragraph(handler, story_id, paragraph_number, text):
             'branched': branched}
 
 @public
+def create_story(handler):
+    """Creates a new, empty story.
+
+    """
+    story = model.Story()
+    story.put()
+
+    return {'story_id': story.key().id()}
+
+@public
 def get_paragraph(handler, story_id, number):
     """Retrieves a single paragraph and its branches.
 

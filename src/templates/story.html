@@ -3,6 +3,7 @@
 {% block page_title_suffix %}{% endblock %}
 {% block page_content %}
 <div id="story">
+    <button id="new-story" title="Start a new story">+</button>
     <h1>Once upon a time...</h1>
 {% for p in story.paragraphs %}
     <p title="#{{ p.number }} {{ p.created|date:"F j, Y H:i" }} ({{ p.num_branches }} branch{{ p.num_branches|pluralize:"es" }})"><a href="/{{ p.story_id }}/{{ p.number }}">{{ p.text }}</a></p>

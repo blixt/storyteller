@@ -221,6 +221,14 @@ textarea:focus {
     float: right;
 }
 
+#new-story {
+    float: right;
+    font-weight: bold;
+    line-height: 1;
+    margin-top: 7px;
+    padding: 2px 7px 7px;
+}
+
 #story p.empty {
     opacity: .5;
 }
