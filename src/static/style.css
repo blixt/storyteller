@@ -232,3 +232,48 @@ textarea:focus {
 #story p.empty {
     opacity: .5;
 }
+
+@media screen and (max-width: 680px) {
+    body {
+        font-size: 13px;
+    }
+
+    h1 {
+        font-size: 23px;
+    }
+
+    h2 {
+        font-size: 19px;
+    }
+
+    ol, p, pre, ul {
+        left: 1px;
+        width: auto;
+    }
+
+    textarea {
+        width: 96%;
+    }
+
+    .paragraph, #story p {
+        font-size: 17px;
+    }
+
+    #content {
+        width: auto;
+    }
+
+    #content_outside {
+        border: 0;
+        border-radius: 0;
+        -khtml-border-radius: 0;
+        -moz-border-radius: 0;
+        margin-top: 0;
+        width: auto;
+    }
+
+    #footer {
+        margin-bottom: 0;
+        width: auto;
+    }
+}
